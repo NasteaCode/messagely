@@ -19,8 +19,9 @@ class User {
   static async register({ username, password, first_name, last_name, phone }) {
     const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
     const result = await db.query(
-      `INSERT INTO users (username, password, first_name, last_name, phone, join_at)
-      VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+      `INSERT INTO users (username, password, first_name,
+        last_name, phone, join_at, last_login_at)
+      VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       RETURNING username, password, first_name, last_name, phone`,
       [username, hashedPassword, first_name, last_name, phone]
     );
@@ -45,6 +46,14 @@ class User {
   /** Update last_login_at for user */
 
   static async updateLoginTimestamp(username) {
+    const result = await db.query(
+      `UPDATE users
+      SET last_login_at = CURRENT_TIMESTAMP
+      WHERE username = $1
+      RETURNING username`,
+      [username]
+    );
+    if (!result) throw new NotFoundError(`User cannot be found: ${username}`);
   }
 
   /** All: basic info on all users:
@@ -95,6 +104,7 @@ class User {
       WHERE m.from_username = $1`,
       [username]
     );
+    if (!result) throw new NotFoundError(`User cannot be found: ${username}`);
     const messageList = result.rows;
 
 
@@ -124,8 +134,32 @@ class User {
 
   static async messagesTo(username) {
     const result = await db.query(
-      `INSERT INTO`
-    )
+      `SELECT m.id, m.from_username AS from_user, m.body, m.sent_at, m.read_at,
+      u.first_name, u.last_name, u.phone
+      FROM messages AS m
+      JOIN users AS u
+      ON m.from_username = u.username
+      WHERE m.to_username = $1`,
+      [username]
+    );
+    if (!result) throw new NotFoundError(`User cannot be found: ${username}`);
+    const messageList = result.rows;
+
+
+    return messageList.map(message => {
+      return {
+        id: message.id,
+        from_user: {
+          username: message.from_user,
+          first_name: message.first_name,
+          last_name: message.last_name,
+          phone: message.phone
+        },
+        body: message.body,
+        sent_at: message.sent_at,
+        read_at: message.read_at,
+      }
+    });
   }
 }
 
