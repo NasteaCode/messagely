@@ -4,7 +4,7 @@
 
 // read .env files and make environmental variables
 
-require("dotenv").config();
+// require("dotenv").config();
 
 const DB_URI = (process.env.NODE_ENV === "test")
     ? "postgresql:///messagely_test"
