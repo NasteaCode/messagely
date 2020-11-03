@@ -145,7 +145,6 @@ class User {
     if (!result.rows.length) throw new NotFoundError(`User cannot be found: ${username}`);
     const messageList = result.rows;
 
-
     return messageList.map(message => {
       return {
         id: message.id,

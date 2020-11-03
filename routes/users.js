@@ -52,7 +52,7 @@ router.get("/:username/to",
   ensureCorrectUser,
   async function (req, res, next) {
     try {
-      let messages = await User.message_to(req.params.username);
+      let messages = await User.messagesTo(req.params.username);
       return res.json({ messages });
     } catch(err) {
       return next(err);
@@ -75,7 +75,7 @@ router.get("/:username/from",
   ensureCorrectUser,
   async function (req, res, next) {
     try {
-      let messages = await User.message_from(req.params.username);
+      let messages = await User.messagesFrom(req.params.username);
       return res.json({ messages });
     } catch(err) {
       return next(err);

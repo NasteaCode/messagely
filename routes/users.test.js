@@ -40,7 +40,7 @@ describe("Test User Routes", function () {
   });
 
 
-  describe(" / GET all users", function () {
+  xdescribe(" / GET all users", function () {
     test("should work when logged in", async function () {
       const response = await request(app).get("/users/").send({
         _token: u1Token
@@ -69,8 +69,22 @@ describe("Test User Routes", function () {
 
   });
 
-  xdescribe("/:username GET user details", function () {
-    test();
+  describe("/:username GET user details", function () {
+    test("should get user details when logged in", async function () {
+      const response = await request(app).get("/users/test1").send({ _token: u1Token });
+      let userDetails = response.body
+      console.log("type of join_at --> ", typeof userDetails.user.join_at);
+      expect(userDetails).toEqual({
+        user: {
+          username: u1.username,
+          first_name: u1.first_name,
+          last_name: u1.last_name,
+          phone: u1.phone,
+          join_at: expect.any(String),
+          last_login_at: expect.any(String)
+        }
+      });
+    });
 
   });
 
