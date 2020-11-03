@@ -3,11 +3,11 @@
 /** User of the site. */
 
 const db = require("../db");
-const { BadRequestError, NotFoundError } = require("../expressError");
+const { NotFoundError } = require("../expressError");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 
-const { SECRET_KEY, BCRYPT_WORK_FACTOR } = require("../config");
+
+const { BCRYPT_WORK_FACTOR } = require("../config");
 
 
 class User {
@@ -37,8 +37,7 @@ class User {
       WHERE username = $1`,
       [username]
     );
-    if (!result) throw new UnauthorizedError("Invalid user/password");
-
+    if (!result.rows.length) return false;
     const hashedPassword = result.rows[0].password;
     return await bcrypt.compare(password, hashedPassword);
   }
@@ -53,7 +52,7 @@ class User {
       RETURNING username`,
       [username]
     );
-    if (!result) throw new NotFoundError(`User cannot be found: ${username}`);
+    if (!result.rows.length) throw new NotFoundError(`User cannot be found: ${username}`);
   }
 
   /** All: basic info on all users:
@@ -79,10 +78,11 @@ class User {
   static async get(username) {
     const result = await db.query(
       `SELECT username, first_name, last_name, phone, join_at, last_login_at
-      FROM users
-      WHERE username = $1`,
+        FROM users
+        WHERE username = $1`,
       [username]
     );
+    if (!result.rows.length) throw new NotFoundError(`User cannot be found: ${username}`);
     return result.rows[0];
   }
 
@@ -104,7 +104,7 @@ class User {
       WHERE m.from_username = $1`,
       [username]
     );
-    if (!result) throw new NotFoundError(`User cannot be found: ${username}`);
+    if (!result.rows.length) throw new NotFoundError(`User cannot be found: ${username}`);
     const messageList = result.rows;
 
 
@@ -142,7 +142,7 @@ class User {
       WHERE m.to_username = $1`,
       [username]
     );
-    if (!result) throw new NotFoundError(`User cannot be found: ${username}`);
+    if (!result.rows.length) throw new NotFoundError(`User cannot be found: ${username}`);
     const messageList = result.rows;
 
 

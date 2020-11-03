@@ -6,6 +6,8 @@ const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 const { SECRET_KEY } = require("../config");
 
+const { BadRequestError } = require("../expressError");
+
 const Router = require("express").Router;
 const router = new Router();
 
@@ -18,8 +20,7 @@ router.post("/login", async function (req, res, next) {
       const token = jwt.sign({ username }, SECRET_KEY);
       return res.json({ token });
     }
-
-
+    throw new BadRequestError();
   } catch (err) {
     return next(err);
   }

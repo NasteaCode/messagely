@@ -9,7 +9,7 @@ const User = require("../models/user")
 
 /** GET / - get list of users.
  *
- * => {users: [{username, first_name, last_name, phone}, ...]}
+ * => {users: [{username, first_name, last_name}, ...]}
  *
  **/
 router.get("/",

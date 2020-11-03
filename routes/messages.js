@@ -6,7 +6,8 @@ const router = new Router();
 const User = require("../models/user");
 const Message = require("../models/message");
 
-const { ensureCorrectUser, ensureLoggedIn } = require("../middleware/auth");
+const { ensureLoggedIn } = require("../middleware/auth");
+const { UnauthorizedError } = require("../expressError");
 
 /** GET /:id - get detail of message.
  *
@@ -25,7 +26,13 @@ router.get("/:id",
   async function (req, res, next) {
     try {
       const messageDetails = await Message.get(req.params.id);
-      return res.json({ message: messageDetails });
+      const messageFromUser = messageDetails.from_user.username;
+      const messageToUser = messageDetails.to_user.username;
+      const myUser = res.locals.user.username;
+      if (messageFromUser === myUser || messageToUser === myUser) {
+        return res.json({ message: messageDetails });
+      }
+      throw new UnauthorizedError();
     } catch (err) {
       return next(err);
     }
@@ -43,13 +50,13 @@ router.post("/",
   ensureLoggedIn,
   async function (req, res, next) {
     try {
-      const message = {
+      const messageDetails = {
         from_username: res.locals.user.username,
         to_username: req.body.to_username,
         body: req.body.body
       }
-      const messageDetails = await Message.create(message);
-      return res.json({ message: messageDetails });
+      const message = await Message.create(messageDetails);
+      return res.json({ message });
     } catch (err) {
       return next(err);
     }
@@ -66,11 +73,17 @@ router.post("/",
  **/
 router.post("/:id/read",
   ensureLoggedIn,
-  async function(req, res, next) {
+  async function (req, res, next) {
     try {
-      let message = await Message.markRead(req.params.id);
+      const messageDetails = await Message.get(req.params.id);
+      const messageToUser = messageDetails.to_user.username;
+      const myUser = res.locals.user.username;
+      if (messageToUser !== myUser) {
+        throw new UnauthorizedError();
+      }
+      const message = await Message.markRead(req.params.id);
       return res.json({ message });
-    } catch(err) {
+    } catch (err) {
       return next(err);
     }
   }
