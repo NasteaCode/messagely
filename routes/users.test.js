@@ -89,3 +89,7 @@ describe("Test User Routes", function () {
   });
 
 });
+
+afterAll(async function () {
+  await db.end();
+});
